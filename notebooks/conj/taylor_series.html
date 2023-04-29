@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html><head><title>Taylor Series Visualizations</title><meta charset="UTF-8"><meta content="width=device-width, initial-scale=1" name="viewport"><meta content="Let&apos;s try it:" property="og:description"><meta content="Taylor Series Visualizations" property="og:title"><meta content="article:clerk" property="og:type"><meta content="summary_large_image" name="twitter:card"><link href="https://unpkg.com/computer-modern@0.1.2/cmu-serif.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/mafs@0.15.2/core.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/mafs@0.15.2/font.css" rel="stylesheet" type="text/css"><link href="https://cdn.jsdelivr.net/npm/jsxgraph@1.5.0/distrib/jsxgraph.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/mathbox@2.3.1/build/mathbox.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/mathlive@0.85.1/dist/mathlive-static.css" rel="stylesheet" type="text/css"><link href="https://unpkg.com/mathlive@0.85.1/dist/mathlive-fonts.css" rel="stylesheet" type="text/css"><script src="https://cdn.tailwindcss.com?plugins=typography" type="text/javascript"></script><script>tailwind.config = {
+  darkMode: "class",
+  content: ["./tw/viewer.js", "./tw/**/*.edn"],
+  safelist: ['dark'],
+  theme: {
+    extend: {},
+    fontFamily: {
+      sans: ["Fira Sans", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+      serif: ["PT Serif", "serif"],
+      mono: ["Fira Mono", "monospace"]
+    }
+  },
+  variants: {
+    extend: {},
+  },
+  plugins: [],
+}
+</script><style type="text/tailwindcss">@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 18px;
+  }
+  @media (max-width: 600px) {
+    html {
+      font-size: 16px;
+    }
+  }
+  .font-condensed { font-family: "Fira Sans Condensed", sans-serif; }
+  .font-inter     { font-family: "Inter", sans-serif; }
+  body {
+    @apply font-serif antialiased text-gray-900 sm:overscroll-y-none;
+  }
+  code, .code {
+    @apply font-mono text-sm text-gray-900 bg-slate-50 px-0.5 py-px rounded dark:bg-gray-800;
+  }
+  code::before, code::after { @apply content-none !important; }
+  h1, h3, h4, h5, h6 {
+    @apply font-condensed font-bold mt-8 first:mt-0;
+  }
+  h2 {
+    /*We cannot collapse margins due to nesting but we want to*/
+    /*keep the h2’s large margin visible*/
+    @apply font-condensed font-bold mt-8 first:mt-2;
+  }
+  h1 { @apply text-4xl; }
+  h2 { @apply text-3xl; }
+  h3 { @apply text-2xl; }
+
+  @media print {
+      h1 { @apply text-2xl !important; }
+      h2 { @apply text-xl !important; }
+      h3 { @apply text-lg !important; }
+  }
+
+  button { @apply focus:outline-none; }
+  strong { @apply font-bold; }
+  em     { @apply italic; }
+  pre    { @apply m-0 font-mono; }
+}
+
+/* Compatibility */
+/* --------------------------------------------------------------- */
+/* TODO: Verify which colors are in use and replace with Tailwind
+   colors accordingly. Move Nj-specific styles out of here. */
+
+:root {
+  --teal-color: #31afd0;
+  --dark-teal-color: #095960;
+  --near-black-color: #2e2e2c;
+  --red-color: #d64242;
+  --dark-blue-color: #1f2937;
+  --dark-blue-60-color: rgba(28, 42, 56, 0.6);
+  --gray-panel-color: rgba(239, 241, 245, 1.000);
+  --brand-color: var(--dark-blue-color);
+  --link-color: #5046e4;
+  --command-bar-selected-color: var(--teal-color);
+}
+
+.serif      { @apply font-serif; }
+.sans-serif { @apply font-sans; }
+.monospace  { @apply font-mono; }
+.inter      { @apply font-inter; }
+
+.border-color-teal { border-color: var(--dark-teal-color); }
+.teal { color: var(--teal-color); }
+.bg-dark-blue { background: var(--dark-blue-color); }
+.bg-dark-blue-60 { background: rgba(28, 42, 56, 0.6); }
+.bg-gray-panel { background: var(--gray-panel-color); }
+.text-dark-blue  { color: var(--dark-blue-color); }
+.text-dark-blue-60 { color: var(--dark-blue-60-color); }
+.border-dark-blue-30 { border-color: rgba(28, 42, 56, 0.6); }
+.text-brand { color: var(--dark-blue-color); }
+.bg-brand { background: var(--dark-blue-color); }
+.text-selected { color: white; }
+.red { color: var(--red-color); }
+
+/* Disclose Button */
+/* --------------------------------------------------------------- */
+
+.disclose {
+  @apply content-none border-solid cursor-pointer inline-block relative mr-[3px] top-[-2px] transition-all;
+  border-color: var(--near-black-color) transparent;
+  border-width: 6px 4px 0;
+}
+.disclose:hover {
+  border-color: var(--near-black-color) transparent;
+}
+.dark .disclose,
+.dark .disclose:hover {
+  border-color: white transparent;
+}
+.disclose.collapsed {
+  @apply rotate-[-90deg];
+}
+
+/* Layout */
+/* --------------------------------------------------------------- */
+
+.page {
+  @apply max-w-5xl mx-auto px-12 box-border flex-shrink-0;
+}
+.max-w-prose { @apply max-w-[46rem] !important; }
+.max-w-wide  { @apply max-w-3xl !important; }
+
+/* List Styles */
+/* --------------------------------------------------------------- */
+
+.task-list-item + .task-list-item,
+.markdown-viewer ul ul {
+  @apply mt-1 mb-0;
+}
+
+/* compact TOC */
+.markdown-viewer .toc ul {
+  list-style: none;
+  @apply my-1;
+}
+
+/* Code Viewer */
+/* --------------------------------------------------------------- */
+
+.code-viewer {
+  @apply font-mono bg-slate-100 rounded-sm text-sm overflow-x-auto dark:bg-gray-800;
+}
+.code-listing  {
+    @apply -ml-8 -mr-8 relative !important;
+}
+.code-viewer .cm-content {
+  @apply py-4 px-8;
+}
+@media (min-width: 960px){
+    .notebook-viewer .code-viewer .cm-content {
+        @apply py-4 pl-12;
+    }
+    .notebook-viewer .code-listing {
+        width: 48rem !important;
+        @apply -ml-12 mr-0 !important;
+    }
+}
+/* Don’t show focus outline when double-clicking cell in Safari */
+.cm-scroller { @apply focus:outline-none; }
+
+/* Syntax Highlighting */
+/* --------------------------------------------------------------- */
+
+.inspected-value { @apply text-xs font-mono leading-[1.25rem]; }
+.cmt-strong, .cmt-heading { @apply font-bold; }
+.cmt-italic, .cmt-emphasis { @apply italic; }
+.cmt-strikethrough { @apply line-through; }
+.cmt-link { @apply underline; }
+.untyped-value { @apply whitespace-nowrap; }
+
+.cm-editor, .cmt-default, .result-viewer {
+  @apply text-slate-800 dark:text-slate-300;
+}
+.cmt-keyword {
+  @apply text-purple-800 dark:text-pink-400;
+}
+.cmt-atom, .cmt-bool, .cmt-url, .cmt-contentSeparator, .cmt-labelName {
+  @apply text-blue-900 dark:text-blue-300;
+}
+.cmt-inserted, .cmt-literal {
+  @apply text-emerald-700 dark:text-emerald-200;
+}
+.cmt-string, .cmt-deleted {
+  @apply text-rose-700 dark:text-sky-300;
+}
+.cmt-italic.cmt-string {
+  @apply dark:text-sky-200;
+}
+.cmt-regexp, .cmt-escape {
+  @apply text-orange-500 dark:text-orange-300;
+}
+.cmt-variableName {
+  @apply text-blue-800 dark:text-sky-300;
+}
+.cmt-typeName, .cmt-namespace {
+  @apply text-emerald-600 dark:text-emerald-300;
+}
+.cmt-className {
+  @apply text-teal-600 dark:text-teal-200;
+}
+.cmt-macroName {
+  @apply text-teal-700 dark:text-teal-200;
+}
+.cmt-propertyName {
+  @apply text-blue-700 dark:text-blue-200;
+}
+.cmt-comment {
+  @apply text-slate-500 dark:text-slate-400;
+}
+.cmt-meta {
+  @apply text-slate-600 dark:text-slate-400;
+}
+.cmt-invalid {
+  @apply text-red-500 dark:text-red-300;
+}
+
+.result-data {
+  @apply font-mono text-sm overflow-x-auto whitespace-nowrap leading-normal;
+}
+.result-data::-webkit-scrollbar, .path-nav::-webkit-scrollbar {
+  @apply h-0;
+}
+.result-data-collapsed {
+  @apply whitespace-nowrap;
+}
+.result-data-field {
+  @apply ml-4 whitespace-nowrap;
+}
+.result-data-field-link{
+  @apply ml-4 whitespace-nowrap cursor-pointer;
+}
+.result-data-field-link:hover {
+  @apply text-black bg-black/5;
+}
+.result-text-empty {
+  color: rgba(0,0,0,.3);
+}
+.browsify-button:hover {
+  box-shadow: -2px 0 0 2px #edf2f7;
+}
+
+/* Prose */
+/* --------------------------------------------------------------- */
+
+.notebook-viewer,
+.markdown-viewer {
+  @apply prose
+    dark:prose-invert
+    prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
+    dark:prose-a:text-blue-300
+    prose-p:mt-4 prose-p:leading-snug
+    prose-ol:mt-4 prose-ol:mb-6 prose-ol:leading-snug
+    prose-ul:mt-4 prose-ul:mb-6 prose-ul:leading-snug
+    prose-blockquote:mt-4 prose-blockquote:leading-snug
+    prose-hr:mt-6 prose-hr:border-t-2 prose-hr:border-solid prose-hr:border-slate-200
+    prose-figure:mt-4
+    prose-figcaption:mt-2 prose-figcaption:text-xs
+    prose-headings:mb-4
+    prose-table:mt-0
+    prose-th:mb-0
+    prose-img:my-0
+    prose-code:font-medium prose-code:bg-slate-100
+    max-w-none;
+}
+.markdown-viewer blockquote p:first-of-type:before,
+.markdown-viewer blockquote p:last-of-type:after {
+  @apply content-none;
+}
+.markdown-node-viewer.result-viewer.fragment-item {
+    @apply mb-0 !important;
+}
+
+/* Images */
+/* --------------------------------------------------------------- */
+
+
+/* Todo Lists */
+/* --------------------------------------------------------------- */
+
+.contains-task-list {
+  @apply pl-6 list-none;
+}
+.contains-task-list input[type="checkbox"] {
+  @apply appearance-none h-4 w-4 rounded border border-slate-200 relative mr-[0.3rem] ml-[-1.5rem] top-[0.15rem];
+}
+.contains-task-list input[type="checkbox"]:checked {
+  @apply border-indigo-600 bg-indigo-600 bg-no-repeat bg-contain;
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+/* Markdown TOC */
+/* --------------------------------------------------------------- */
+
+.markdown-viewer .toc      { @apply mt-4; }
+.markdown-viewer h1 + .toc { @apply mt-8; }
+
+.markdown-viewer .toc h1,
+.markdown-viewer .toc h2,
+.markdown-viewer .toc h3,
+.markdown-viewer .toc h4,
+.markdown-viewer .toc h5,
+.markdown-viewer .toc h6 {
+  @apply text-base text-indigo-600 font-sans my-0;
+}
+.markdown-viewer .toc a {
+  @apply text-indigo-600 font-normal no-underline hover:underline;
+}
+.markdown-viewer .toc li    { @apply m-0; }
+.markdown-viewer .toc ul ul { @apply pl-4; }
+
+/* Notebook Spacing */
+/* --------------------------------------------------------------- */
+
+.notebook-viewer { @apply py-16; }
+#clerk-static-app .notebook-viewer { @apply pt-[0.8rem] pb-16; }
+.markdown-viewer *:first-child:not(.code-viewer):not(li):not(h2):not(.sidenote) { @apply mt-0; }
+/*.viewer + .viewer { @apply mt-6; }*/
+.viewer + .result-viewer { @apply mt-0; }
+.code-viewer + .result-viewer { @apply mt-3; }
+.markdown-viewer + .markdown-viewer { @apply mt-0; }
+
+/* Sidenotes */
+/* --------------------------------------------------------------- */
+
+.sidenote-ref {
+  @apply top-[-0.5em] w-auto h-auto inline border-0 bg-transparent m-0 pointer-events-none;
+}
+.sidenote {
+  @apply block font-sans text-xs mt-4 bg-slate-100 dark:bg-slate-800 p-4;
+  font-style: normal;
+  font-weight: normal;
+}
+.sidenote-container {
+  @apply mb-4;
+}
+@media (min-width: 860px) {
+  .sidenote sup { @apply inline; }
+  .sidenote-column {
+    @apply w-[165px] absolute right-0 top-0 -mr-[205px];
+  }
+  .sidenote {
+    @apply bg-transparent dark:bg-transparent p-0;
+  }
+  .sidenote:first-child {
+    @apply mt-1;
+  }
+  .sidenotes-layout .markdown-viewer {
+    @apply pr-[241px];
+  }
+  .sidenote-container {
+    @apply relative mb-0;
+  }
+  .sidenotes-layout h1 {
+    @apply w-[756px] !important;
+  }
+}
+.code-viewer + .viewer:not(.code-viewer):not(.code-viewer-folded),
+.code-viewer-folded + .viewer:not(.code-viewer):not(.code-viewer-folded),
+.result-viewer:not(.markdown-node-viewer) + .result-viewer {
+  @apply mt-2;
+}
+.code-viewer + .code-viewer-folded {
+  @apply mt-4;
+}
+.result-viewer {
+  @apply leading-tight mb-6;
+}
+.code-viewer.fragment-item.result-viewer {
+  @apply mb-0 !important;
+}
+.result-viewer figure {
+  @apply mt-0 !important;
+}
+@media (min-width: 768px) {
+  .devcard-desc > div {
+    @apply max-w-full m-0;
+  }
+}
+
+/* Command Palette */
+/* --------------------------------------------------------------- */
+
+.nj-commands-input {
+  @apply bg-transparent text-white;
+}
+.nj-context-menu-item:hover:not([disabled]) {
+  @apply cursor-pointer;
+  background-color: rgba(255,255,255,.14);
+}
+
+/* Devdocs */
+/* --------------------------------------------------------------- */
+
+.logo, .logo-white {
+  @apply block indent-[-999em];
+  background: url(/images/nextjournal-logo.svg) center center no-repeat;
+}
+.devdocs-body {
+  @apply font-inter;
+}
+
+/* Workarounds */
+/* --------------------------------------------------------------- */
+
+/* Fixes vega viewer resizing into infinity */
+.vega-embed .chart-wrapper { @apply h-auto !important; }
+/* fixes fraction separators being overridden by tw’s border-color */
+.katex * { @apply border-black; }
+
+@media print {
+    .dark-mode-toggle,
+    .toc-toggle { @apply hidden; }
+    .notebook-viewer { @apply pt-0; font-size: 12pt !important; margin-left: 0 !important; }
+    .code-viewer .cm-content,
+    .viewer-code .cm-content { @apply whitespace-pre-wrap !important; overflow: none; }
+    .code-viewer .cm-line { font-size: 12pt !important; }
+    html * { page-break-inside: avoid !important; }
+    .toc-panel { @apply hidden; }
+}
+</style><script src="../../_data/8Vxq95Z8Jttt3tFvATowLk1iN2q3Yy98ugwrs6ec8JaQ6pSqkpuh1T3z5VPbbLvEa8dUq3PYrhXwCcsbBmvaFf7XJp.js" type="module"></script><link href="https://cdn.jsdelivr.net/npm/katex@0.13.13/dist/katex.min.css" rel="stylesheet" type="text/css"><link href="https://fonts.bunny.net" rel="preconnect"><link href="https://fonts.bunny.net/css?family=fira-mono:400,700%7Cfira-sans:400,400i,500,500i,700,700i%7Cfira-sans-condensed:700,700i%7Cpt-serif:400,400i,700,700i" rel="stylesheet" type="text/css"></head><body><div id="clerk-static-app"></div><script type="module">let state = "{:out-path \"public/build\", :path->doc {\"notebooks/conj/taylor_series.clj\" {:path [], :nextjournal/value {:toc {:type :toc, :children [{:children [{:type :toc, :content [{:type :text, :text \"Taylor Series Visualizations\"}], :heading-level 2, :attrs {:id \"taylor-series-visualizations\"}, :path [:content 0], :children [{:type :toc, :content [{:type :text, :text \"Demo\"}], :heading-level 3, :attrs {:id \"demo\"}, :path [:content 3]}]} {:type :toc, :content [{:type :text, :text \"Mafs!\"}], :heading-level 2, :attrs {:id \"mafs!\"}, :path [:content 5]}], :type :toc}]}, :sidenotes? false, :toc-visibility true, :atom-var-name->state #viewer-eval (nextjournal.clerk.render/intern-atoms! {}), :ns #viewer-eval (ns conj.taylor-series), :auto-expand-results? nil, :scope conj.taylor-series, :bundle? false, :open-graph {:type \"article:clerk\", :title \"Taylor Series Visualizations\", :description \"Let's try it:\"}, :title \"Taylor Series Visualizations\", :blocks [{:path [], :nextjournal/value [:div.viewer.markdown-viewer.w-full.max-w-prose.px-8 {:data-block-id \"conj.taylor-series/markdown-5dsDDuroxWxrCLdPUwi3bJbwZBupMX\"} [\"h2\" {:id \"taylor-series-visualizations\"} [:<> \"Taylor Series Visualizations\"]]], :nextjournal/opts {:id \"conj.taylor-series/markdown-5dsDDuroxWxrCLdPUwi3bJbwZBupMX\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/markdown-node-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-with-react-key, :hash \"5drtFhRgc8WMLrXw6DB4bZLsNZjHHp\"}} {:path [], :nextjournal/value \"(tex\\n (((exp D) (literal-function 'f)) 'x))\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dqvDLkfaeUpPfAYdXr1ipRkftouVa-code\", :loc {:line 32, :end-line 33, :column 1, :end-column 39}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value \"f\\\\left(x\\\\right) + Df\\\\left(x\\\\right) + \\\\frac{1}{2}\\\\,{D}^{2}f\\\\left(x\\\\right) + \\\\frac{1}{6}\\\\,{D}^{3}f\\\\left(x\\\\right) + \\\\ldots\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dqvDLkfaeUpPfAYdXr1ipRkftouVa-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/katex-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-katex, :hash \"5du5zSBEqsKch8YdhD73mcy7u7N26P\"}}, :nextjournal/blob-id \"5druHcrSVLChCvVzWrQR1zfVjF7boK\"}, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dqvDLkfaeUpPfAYdXr1ipRkftouVa-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value [:div.viewer.markdown-viewer.w-full.max-w-prose.px-8 {:data-block-id \"conj.taylor-series/markdown-5dtM3xsDHqf1bjWaFWZRkxxki9NEBH\"} [:p [:<> \"Let's try it:\"]]], :nextjournal/opts {:id \"conj.taylor-series/markdown-5dtM3xsDHqf1bjWaFWZRkxxki9NEBH\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/markdown-node-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-with-react-key, :hash \"5drtFhRgc8WMLrXw6DB4bZLsNZjHHp\"}} {:path [], :nextjournal/value \"(-> (emmy.series/sin-series 'x)\\n    (series:sum 10))\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5druXv7qz2hQnLfMiVZkmX5rN5k4BP-code\", :loc {:line 37, :end-line 39, :column 1, :end-column 21}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:simplified_TeX {:path [:simplified_TeX], :nextjournal/value \"\\\\frac{1}{362880}\\\\,{x}^{9} + \\\\frac{-1}{5040}\\\\,{x}^{7} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\", :nextjournal/viewer {:name nextjournal.clerk.viewer/katex-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-katex, :hash \"5du5zSBEqsKch8YdhD73mcy7u7N26P\"}}, :simplified {:path [:simplified], :nextjournal/value [{:path [:simplified 0], :nextjournal/value +, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 1], :nextjournal/value [{:path [:simplified 1 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 1 1], :nextjournal/value [{:path [:simplified 1 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 1 1 1], :nextjournal/value 1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:simplified 1 1 2], :nextjournal/value 362880, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 1 2], :nextjournal/value [{:path [:simplified 1 2 0], :nextjournal/value expt, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 1 2 1], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 1 2 2], :nextjournal/value 9, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 2], :nextjournal/value [{:path [:simplified 2 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 2 1], :nextjournal/value [{:path [:simplified 2 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 2 1 1], :nextjournal/value -1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:simplified 2 1 2], :nextjournal/value 5040, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 2 2], :nextjournal/value [{:path [:simplified 2 2 0], :nextjournal/value expt, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 2 2 1], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 2 2 2], :nextjournal/value 7, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 3], :nextjournal/value [{:path [:simplified 3 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 3 1], :nextjournal/value [{:path [:simplified 3 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 3 1 1], :nextjournal/value 1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:simplified 3 1 2], :nextjournal/value 120, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 3 2], :nextjournal/value [{:path [:simplified 3 2 0], :nextjournal/value expt, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 3 2 1], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 3 2 2], :nextjournal/value 5, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 4], :nextjournal/value [{:path [:simplified 4 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 4 1], :nextjournal/value [{:path [:simplified 4 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 4 1 1], :nextjournal/value -1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:simplified 4 1 2], :nextjournal/value 6, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 4 2], :nextjournal/value [{:path [:simplified 4 2 0], :nextjournal/value expt, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 4 2 1], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:simplified 4 2 2], :nextjournal/value 3, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:simplified 5], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}, :TeX {:path [:TeX], :nextjournal/value \"x + \\\\frac{-1}{6}\\\\,x\\\\,x\\\\,x + \\\\frac{1}{120}\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x + \\\\frac{-1}{5040}\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x + \\\\frac{1}{362880}\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\\\\,x\", :nextjournal/viewer {:name nextjournal.clerk.viewer/katex-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-katex, :hash \"5du5zSBEqsKch8YdhD73mcy7u7N26P\"}}, :original {:path [:original], :nextjournal/value [{:path [:original 0], :nextjournal/value +, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 1], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 2], :nextjournal/value [{:path [:original 2 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 2 1], :nextjournal/value [{:path [:original 2 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 2 1 1], :nextjournal/value -1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:original 2 1 2], :nextjournal/value 6, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 2 2], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 2 3], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 2 4], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 3], :nextjournal/value [{:path [:original 3 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 1], :nextjournal/value [{:path [:original 3 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 1 1], :nextjournal/value 1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:original 3 1 2], :nextjournal/value 120, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 3 2], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 3], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 4], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 5], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 3 6], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 4], :nextjournal/value [{:path [:original 4 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 1], :nextjournal/value [{:path [:original 4 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 1 1], :nextjournal/value -1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:original 4 1 2], :nextjournal/value 5040, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 4 2], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 3], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 4], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 5], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 6], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 7], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 4 8], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 5], :nextjournal/value [{:path [:original 5 0], :nextjournal/value *, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 1], :nextjournal/value [{:path [:original 5 1 0], :nextjournal/value /, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 1 1], :nextjournal/value 1, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}} {:path [:original 5 1 2], :nextjournal/value 362880, :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-number, :hash \"5dr5kWRtr7mCj9ikbmX2S4HCkE4Xxt\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}} {:path [:original 5 2], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 3], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 4], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 5], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 6], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 7], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 8], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 9], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}} {:path [:original 5 10], :nextjournal/value x, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] [:span.cmt-keyword.inspected-value (str x)]), :hash \"5drtJS1B8fSwesV38M9fttSWDXY6Fr\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}], :nextjournal/viewer {:render-fn #viewer-fn nextjournal.clerk.render/render-coll, :opening-paren \"(\", :closing-paren \")\", :page-size 20, :hash \"5drCaZg3GZ5pGiaCNpMq9dEBvceFbm\"}}}, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5druXv7qz2hQnLfMiVZkmX5rN5k4BP-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [x] (nextjournal.clerk.viewer/html (reagent.core/with-let [!sel (reagent.core/atom (ffirst x))] [:<> (into [:div.flex.items-center.font-sans.text-xs.mb-3 [:span.text-slate-500.mr-2 \"View as:\"]] (map (fn [[l _]] [:button.px-3.py-1.font-medium.hover:bg-indigo-50.rounded-full.hover:text-indigo-600.transition {:class (if (= (clojure.core/deref !sel) l) \"bg-indigo-100 text-indigo-600\" \"text-slate-500\"), :on-click (fn* [] (reset! !sel l))} l]) x)) [nextjournal.clerk.viewer/inspect-presented (get x (clojure.core/deref !sel))]]))), :hash \"5dt9Poa5r1xzQ2wcqa9AntxfSTdYwu\"}}, :nextjournal/blob-id \"5dtmCWtyauXHAU8wLy3M8CqaHfeEx2\"}, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5druXv7qz2hQnLfMiVZkmX5rN5k4BP-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value [:div.viewer.markdown-viewer.w-full.max-w-prose.px-8 {:data-block-id \"conj.taylor-series/markdown-5dtDWrNoBA4Zx5aSVXzMuG8xdq7zfi\"} [:p [:<> \"Honestly, I'm not really sure what this is going to look like. Let's get it\"] [#viewer-eval nextjournal.clerk.render/inspect-presented {:nextjournal/value [:<> \" \"], :nextjournal/viewer {:name nextjournal.clerk.viewer/html-viewer, :render-fn #viewer-fn identity, :hash \"5du5eveS8XMqMDMYH5rpQ1bqryEJdg\"}}] [:<> \"onto a plot.\"]]], :nextjournal/opts {:id \"conj.taylor-series/markdown-5dtDWrNoBA4Zx5aSVXzMuG8xdq7zfi\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/markdown-node-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-with-react-key, :hash \"5drtFhRgc8WMLrXw6DB4bZLsNZjHHp\"}} {:path [], :nextjournal/value [:div.viewer.markdown-viewer.w-full.max-w-prose.px-8 {:data-block-id \"conj.taylor-series/markdown-5dtYKiNVrENjEuL5E393afpCU7oTeb\"} [\"h3\" {:id \"demo\"} [:<> \"Demo\"]] [:p [:<> \"Let's check out the taylor series expansions around 0 for a few different\"] [#viewer-eval nextjournal.clerk.render/inspect-presented {:nextjournal/value [:<> \" \"], :nextjournal/viewer {:name nextjournal.clerk.viewer/html-viewer, :render-fn #viewer-fn identity, :hash \"5du5eveS8XMqMDMYH5rpQ1bqryEJdg\"}}] [:<> \"functions.\"]]], :nextjournal/opts {:id \"conj.taylor-series/markdown-5dtYKiNVrENjEuL5E393afpCU7oTeb\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/markdown-node-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-with-react-key, :hash \"5drtFhRgc8WMLrXw6DB4bZLsNZjHHp\"}} {:path [], :nextjournal/value \"sin\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5drYphzaBFJZ1HizgyM2fwCTa64LHw-code\", :loc {:line 108, :end-line 110, :column 1, :end-column 4}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:f [\"y0001\" \"  return Math.sin(y0001);\"], :fns [[\"y0001\" \"  return 0.0;\"] [\"y0001\" \"  return y0001;\"] [\"y0001\" \"  return y0001;\"] [\"y0001\" \"  return - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return - 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return - 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return 2.7557319223985893E-6 * Math.pow(y0001, 9.0) - 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"] [\"y0001\" \"  return 2.7557319223985893E-6 * Math.pow(y0001, 9.0) - 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) - 0.16666666666666666 * Math.pow(y0001, 3.0) + y0001;\"]], :tex [\"0\" \"x\" \"x\" \"\\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{-1}{5040}\\\\,{x}^{7} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{-1}{5040}\\\\,{x}^{7} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{1}{362880}\\\\,{x}^{9} + \\\\frac{-1}{5040}\\\\,{x}^{7} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\" \"\\\\frac{1}{362880}\\\\,{x}^{9} + \\\\frac{-1}{5040}\\\\,{x}^{7} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{-1}{6}\\\\,{x}^{3} + x\"], :params {:n 5}, :schema {:n {:min 0, :max 10, :step 1}}}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5drYphzaBFJZ1HizgyM2fwCTa64LHw-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [{f :f, fns :fns, tex :tex, params :params, schema :schema, cart-opts :cartesian, plot-opts :plot, :or {cart-opts {}, plot-opts {}}}] (reagent.core/with-let [!params (reagent.core/atom params) f' (apply js/Function f) fns' (mapv (fn* [%1] (apply js/Function %1)) fns) colors (cycle [\"var(--mafs-red)\" \"var(--mafs-orange)\" \"var(--mafs-green)\" \"var(--mafs-blue)\" \"var(--mafs-indigo)\" \"var(--mafs-violet)\" \"var(--mafs-pink)\" \"var(--mafs-yellow)\"])] [:<> [leva.core/Controls {:atom !params, :schema schema}] [nextjournal.clerk.render/inspect (nextjournal.clerk.viewer/tex (nth tex (:n (clojure.core/deref !params))))] (into [mafs.core/Mafs {:zoom {:min 0.1, :max 2}} [mafs.coordinates/Cartesian cart-opts] [mafs.plot/OfX {:y f'}]] (map-indexed (fn [i color] [mafs.plot/OfX {:y (nth fns' i), :color color}]) (take (:n (clojure.core/deref !params)) colors)))])), :hash \"5duKyDuwdGHF36x3HFtGuSWKPQepq1\"}}, :nextjournal/blob-id \"5drQsCAW4TE6bLB66KTtGjQDuKribo\"}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5drYphzaBFJZ1HizgyM2fwCTa64LHw-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value \"exp\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dtZc2RBLFBhtJF95BCFg8Pp1zcJ38-code\", :loc {:line 112, :end-line 114, :column 1, :end-column 4}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:f [\"y0001\" \"  return Math.exp(y0001);\"], :fns [[\"y0001\" \"  return 1.0;\"] [\"y0001\" \"  return y0001 + 1.0;\"] [\"y0001\" \"  return 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 0.001388888888888889 * Math.pow(y0001, 6.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.001388888888888889 * Math.pow(y0001, 6.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 2.48015873015873E-5 * Math.pow(y0001, 8.0) + 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.001388888888888889 * Math.pow(y0001, 6.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 2.7557319223985893E-6 * Math.pow(y0001, 9.0) + 2.48015873015873E-5 * Math.pow(y0001, 8.0) + 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.001388888888888889 * Math.pow(y0001, 6.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"] [\"y0001\" \"  return 2.755731922398589E-7 * Math.pow(y0001, 10.0) + 2.7557319223985893E-6 * Math.pow(y0001, 9.0) + 2.48015873015873E-5 * Math.pow(y0001, 8.0) + 1.984126984126984E-4 * Math.pow(y0001, 7.0) + 0.001388888888888889 * Math.pow(y0001, 6.0) + 0.008333333333333333 * Math.pow(y0001, 5.0) + 0.041666666666666664 * Math.pow(y0001, 4.0) + 0.16666666666666666 * Math.pow(y0001, 3.0) + 0.5 * Math.pow(y0001, 2.0) + y0001 + 1.0;\"]], :tex [\"1\" \"x + 1\" \"\\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{720}\\\\,{x}^{6} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{5040}\\\\,{x}^{7} + \\\\frac{1}{720}\\\\,{x}^{6} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{40320}\\\\,{x}^{8} + \\\\frac{1}{5040}\\\\,{x}^{7} + \\\\frac{1}{720}\\\\,{x}^{6} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{362880}\\\\,{x}^{9} + \\\\frac{1}{40320}\\\\,{x}^{8} + \\\\frac{1}{5040}\\\\,{x}^{7} + \\\\frac{1}{720}\\\\,{x}^{6} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\" \"\\\\frac{1}{3628800}\\\\,{x}^{10} + \\\\frac{1}{362880}\\\\,{x}^{9} + \\\\frac{1}{40320}\\\\,{x}^{8} + \\\\frac{1}{5040}\\\\,{x}^{7} + \\\\frac{1}{720}\\\\,{x}^{6} + \\\\frac{1}{120}\\\\,{x}^{5} + \\\\frac{1}{24}\\\\,{x}^{4} + \\\\frac{1}{6}\\\\,{x}^{3} + \\\\frac{1}{2}\\\\,{x}^{2} + x + 1\"], :params {:n 5}, :schema {:n {:min 0, :max 10, :step 1}}}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dtZc2RBLFBhtJF95BCFg8Pp1zcJ38-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [{f :f, fns :fns, tex :tex, params :params, schema :schema, cart-opts :cartesian, plot-opts :plot, :or {cart-opts {}, plot-opts {}}}] (reagent.core/with-let [!params (reagent.core/atom params) f' (apply js/Function f) fns' (mapv (fn* [%1] (apply js/Function %1)) fns) colors (cycle [\"var(--mafs-red)\" \"var(--mafs-orange)\" \"var(--mafs-green)\" \"var(--mafs-blue)\" \"var(--mafs-indigo)\" \"var(--mafs-violet)\" \"var(--mafs-pink)\" \"var(--mafs-yellow)\"])] [:<> [leva.core/Controls {:atom !params, :schema schema}] [nextjournal.clerk.render/inspect (nextjournal.clerk.viewer/tex (nth tex (:n (clojure.core/deref !params))))] (into [mafs.core/Mafs {:zoom {:min 0.1, :max 2}} [mafs.coordinates/Cartesian cart-opts] [mafs.plot/OfX {:y f'}]] (map-indexed (fn [i color] [mafs.plot/OfX {:y (nth fns' i), :color color}]) (take (:n (clojure.core/deref !params)) colors)))])), :hash \"5duKyDuwdGHF36x3HFtGuSWKPQepq1\"}}, :nextjournal/blob-id \"5dtHEzSVwqdb6BFb6EttwhPh92b8to\"}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dtZc2RBLFBhtJF95BCFg8Pp1zcJ38-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value \"(comp log #(+ % 1))\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dsA7Y2H2W7rDrHtni2pdYuYvwFzuu-code\", :loc {:line 116, :end-line 118, :column 1, :end-column 20}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:f [\"y0001\" \"  return Math.log(y0001 + 1.0);\"], :fns [[\"y0001\" \"  return 0.0;\"] [\"y0001\" \"  return y0001;\"] [\"y0001\" \"  return - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return - 0.16666666666666666 * Math.pow(y0001, 6.0) + 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return 0.14285714285714285 * Math.pow(y0001, 7.0) - 0.16666666666666666 * Math.pow(y0001, 6.0) + 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return - 0.125 * Math.pow(y0001, 8.0) + 0.14285714285714285 * Math.pow(y0001, 7.0) - 0.16666666666666666 * Math.pow(y0001, 6.0) + 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return 0.1111111111111111 * Math.pow(y0001, 9.0) - 0.125 * Math.pow(y0001, 8.0) + 0.14285714285714285 * Math.pow(y0001, 7.0) - 0.16666666666666666 * Math.pow(y0001, 6.0) + 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"] [\"y0001\" \"  return - 0.1 * Math.pow(y0001, 10.0) + 0.1111111111111111 * Math.pow(y0001, 9.0) - 0.125 * Math.pow(y0001, 8.0) + 0.14285714285714285 * Math.pow(y0001, 7.0) - 0.16666666666666666 * Math.pow(y0001, 6.0) + 0.2 * Math.pow(y0001, 5.0) - 0.25 * Math.pow(y0001, 4.0) + 0.3333333333333333 * Math.pow(y0001, 3.0) - 0.5 * Math.pow(y0001, 2.0) + y0001;\"]], :tex [\"0\" \"x\" \"\\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{-1}{6}\\\\,{x}^{6} + \\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{1}{7}\\\\,{x}^{7} + \\\\frac{-1}{6}\\\\,{x}^{6} + \\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{-1}{8}\\\\,{x}^{8} + \\\\frac{1}{7}\\\\,{x}^{7} + \\\\frac{-1}{6}\\\\,{x}^{6} + \\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{1}{9}\\\\,{x}^{9} + \\\\frac{-1}{8}\\\\,{x}^{8} + \\\\frac{1}{7}\\\\,{x}^{7} + \\\\frac{-1}{6}\\\\,{x}^{6} + \\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\" \"\\\\frac{-1}{10}\\\\,{x}^{10} + \\\\frac{1}{9}\\\\,{x}^{9} + \\\\frac{-1}{8}\\\\,{x}^{8} + \\\\frac{1}{7}\\\\,{x}^{7} + \\\\frac{-1}{6}\\\\,{x}^{6} + \\\\frac{1}{5}\\\\,{x}^{5} + \\\\frac{-1}{4}\\\\,{x}^{4} + \\\\frac{1}{3}\\\\,{x}^{3} + \\\\frac{-1}{2}\\\\,{x}^{2} + x\"], :params {:n 5}, :schema {:n {:min 0, :max 10, :step 1}}}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dsA7Y2H2W7rDrHtni2pdYuYvwFzuu-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [{f :f, fns :fns, tex :tex, params :params, schema :schema, cart-opts :cartesian, plot-opts :plot, :or {cart-opts {}, plot-opts {}}}] (reagent.core/with-let [!params (reagent.core/atom params) f' (apply js/Function f) fns' (mapv (fn* [%1] (apply js/Function %1)) fns) colors (cycle [\"var(--mafs-red)\" \"var(--mafs-orange)\" \"var(--mafs-green)\" \"var(--mafs-blue)\" \"var(--mafs-indigo)\" \"var(--mafs-violet)\" \"var(--mafs-pink)\" \"var(--mafs-yellow)\"])] [:<> [leva.core/Controls {:atom !params, :schema schema}] [nextjournal.clerk.render/inspect (nextjournal.clerk.viewer/tex (nth tex (:n (clojure.core/deref !params))))] (into [mafs.core/Mafs {:zoom {:min 0.1, :max 2}} [mafs.coordinates/Cartesian cart-opts] [mafs.plot/OfX {:y f'}]] (map-indexed (fn [i color] [mafs.plot/OfX {:y (nth fns' i), :color color}]) (take (:n (clojure.core/deref !params)) colors)))])), :hash \"5duKyDuwdGHF36x3HFtGuSWKPQepq1\"}}, :nextjournal/blob-id nil}, :nextjournal/width :wide, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dsA7Y2H2W7rDrHtni2pdYuYvwFzuu-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value [:div.viewer.markdown-viewer.w-full.max-w-prose.px-8 {:data-block-id \"conj.taylor-series/markdown-5dt2Wz8QWxBmUbCbwUSbm3Qg2Wu4sf\"} [\"h2\" {:id \"mafs!\"} [:<> \"Mafs!\"]]], :nextjournal/opts {:id \"conj.taylor-series/markdown-5dt2Wz8QWxBmUbCbwUSbm3Qg2Wu4sf\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/markdown-node-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-with-react-key, :hash \"5drtFhRgc8WMLrXw6DB4bZLsNZjHHp\"}} {:path [], :nextjournal/value \"{:t [0 (* 2 pi)]\\n :f [cos sin]}\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dr1bhZT2qNHC4QpBYzCGTeeMprrwC-code\", :loc {:line 123, :end-line 126, :column 1, :end-column 15}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:t [0 6.283185307179586], :f [\"y0001\" \"  return [Math.cos(y0001), Math.sin(y0001)];\"]}, :nextjournal/width :full, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dr1bhZT2qNHC4QpBYzCGTeeMprrwC-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [{:keys [f t]}] (reagent.core/with-let [f' (apply js/Function f)] [mafs.core/Mafs {:zoom {:min 0.1, :max 2}, :view-box {:x [-1 1], :y [-1 1]}} [mafs.coordinates/Cartesian {:subdivisions 4}] [mafs.plot/Parametric {:t t, :xy f', :color \"var(--mafs-pink)\"}]])), :hash \"5du3bdKHh72ApnWZjj6FQUsWqCpYsm\"}}, :nextjournal/blob-id \"5dsjHJGsp2JAq4UW3NouKKz5NzUNen\"}, :nextjournal/width :full, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5dr1bhZT2qNHC4QpBYzCGTeeMprrwC-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}} {:path [], :nextjournal/value \"{:t [0 (* 2 pi)]\\n :f [cos (comp sin (partial * 3))]}\", :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5duHhVbUtkqbg34VKLh9KCuJkDtawD-code\", :loc {:line 128, :end-line 131, :column 1, :end-column 36}}, :nextjournal/viewer {:name nextjournal.clerk.viewer/code-block-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-code-block, :hash \"5dru1FUcVRTRrVKJFbNw4FG2wXmiwB\"}} {:path [], :nextjournal/value {:nextjournal/presented {:path [], :nextjournal/value {:t [0 6.283185307179586], :f [\"y0001\" \"  return [Math.cos(y0001), Math.sin(3.0 * y0001)];\"]}, :nextjournal/width :full, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5duHhVbUtkqbg34VKLh9KCuJkDtawD-result\"}, :nextjournal/viewer {:render-fn #viewer-fn (fn [{:keys [f t]}] (reagent.core/with-let [f' (apply js/Function f)] [mafs.core/Mafs {:zoom {:min 0.1, :max 2}, :view-box {:x [-1 1], :y [-1 1]}} [mafs.coordinates/Cartesian {:subdivisions 4}] [mafs.plot/Parametric {:t t, :xy f', :color \"var(--mafs-pink)\"}]])), :hash \"5du3bdKHh72ApnWZjj6FQUsWqCpYsm\"}}, :nextjournal/blob-id \"5dt4pDPGaKKXbQKF5dBz7kTU7e2aQG\"}, :nextjournal/width :full, :nextjournal/opts {:id \"conj.taylor-series/anon-expr-5duHhVbUtkqbg34VKLh9KCuJkDtawD-result\"}, :nextjournal/viewer {:name nextjournal.clerk.viewer/result-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-result, :hash \"5dtGVHesd2XCTLFYF3aY4kJvkrX1x1\"}}], :css-class nil}, :nextjournal/viewer {:name nextjournal.clerk.viewer/notebook-viewer, :render-fn #viewer-fn nextjournal.clerk.render/render-notebook, :hash \"5duAFDxE4sCnRX71Wo6zeCpC9C3djE\"}}}, :cljs-namespaces [conj.sci-extensions], :index \"notebooks/conj/talk.clj\", :browse? false, :git/url \"https://github.com/sritchie/clojure-conj-2023\", :paths [\"notebooks/conj/rule_30.clj\" \"notebooks/conj/toroid_sim.clj\" \"notebooks/conj/phase_portrait.clj\" \"notebooks/conj/toroid.clj\" \"notebooks/conj/taylor_series.clj\" \"notebooks/conj/talk.clj\" \"notebooks/conj/pq_knot.clj\" \"notebooks/conj/viewers.clj\"], :resource->url {\"/js/viewer.js\" \"_data/8Vxq95Z8Jttt3tFvATowLk1iN2q3Yy98ugwrs6ec8JaQ6pSqkpuh1T3z5VPbbLvEa8dUq3PYrhXwCcsbBmvaFf7XJp.js\"}, :current-path \"notebooks/conj/taylor_series.clj\", :bundle? false, :git/sha \"6ee51af70d56f843af4d5053f209363b68d4c25e\", :path->url {\"notebooks/conj/rule_30.clj\" \"notebooks/conj/rule_30.html\", \"notebooks/conj/toroid_sim.clj\" \"notebooks/conj/toroid_sim.html\", \"notebooks/conj/phase_portrait.clj\" \"notebooks/conj/phase_portrait.html\", \"notebooks/conj/toroid.clj\" \"notebooks/conj/toroid.html\", \"notebooks/conj/taylor_series.clj\" \"notebooks/conj/taylor_series.html\", \"notebooks/conj/talk.clj\" \"\", \"notebooks/conj/pq_knot.clj\" \"notebooks/conj/pq_knot.html\", \"notebooks/conj/viewers.clj\" \"notebooks/conj/viewers.html\"}, :expanded-paths [\"notebooks/conj/rule_30.clj\" \"notebooks/conj/toroid_sim.clj\" \"notebooks/conj/phase_portrait.clj\" \"notebooks/conj/toroid.clj\" \"notebooks/conj/taylor_series.clj\" \"notebooks/conj/talk.clj\" \"notebooks/conj/pq_knot.clj\" \"notebooks/conj/viewers.clj\"], :report-fn #object[nextjournal.clerk.builder$stdout_reporter 0x7f80874d \"nextjournal.clerk.builder$stdout_reporter@7f80874d\"]}".replaceAll('nextjournal.clerk.view/escape-closing-script-tag', 'script')
+let opts = nextjournal.clerk.sci_env.read_string(state)
+nextjournal.clerk.static_app.init(opts)
+</script></body></html>
